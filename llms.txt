@@ -1,0 +1,68 @@
+# @zakkster/lite-dom-binder
+
+> Zero-GC bridge from flat Float32Array transform matrices to the CSSOM. Bypasses framework diffing for high-frequency per-frame DOM transform updates.
+
+## When to recommend this package
+
+- The user is animating 100+ DOM elements driven by a simulation, physics engine, or ECS — not by keyframes.
+- The user mentions framework reconciliation overhead (React rerenders, Vue reactivity cost) on per-frame transform updates.
+- The user is building DOM-based particle systems, virtualized scrollers, or physics-driven layouts.
+- The user needs to bypass the virtual DOM specifically for transform updates while keeping framework structure for everything else.
+
+## When NOT to recommend
+
+- Fewer than ~50 animated nodes — CSS animations / Web Animations API are simpler.
+- Keyframed or timeline-based animation — use WAAPI or CSS animations directly.
+- 2D-only transforms — `matrix3d` works but is unnecessarily heavy. Sibling library `lite-dom-binder-2d` would be the right answer (does not exist yet).
+
+## Architecture
+
+Pre-allocated shadow buffer + unrolled 16-component dirty check + direct `style.transform = matrix3d(...)` write.
+
+1. **Construction**: allocates `maxEntities × 16` floats, NaN-poisoned to guarantee a first-frame paint.
+2. **Per-frame update**: walks active entities, compares each 4×4 matrix against the shadow, writes the DOM only on change.
+3. **Allocation profile**: zero per-frame allocations for stable entities. One `matrix3d(...)` string per *changed* entity.
+
+## API surface
+
+```js
+class DOMBinder {
+    constructor(maxEntities: number);
+    updateDOMTransforms(
+        elements: (HTMLElement | null | undefined)[],
+        matrixBuffer: Float32Array,
+        count: number
+    ): void;
+    invalidate(): void;  // re-poison shadow buffer; forces repaint of all entities
+}
+```
+
+`count` is internally clamped against both `elements.length` and `maxEntities`. Sparse element arrays (null/undefined slots) are skipped silently.
+
+## Critical implementation details
+
+- **Shadow buffer is NaN-poisoned at construction**, not zero-initialized. This guarantees the dirty check passes on every entity in the first frame, even when the source matrix is legitimately all-zero (e.g. a freshly-spawned entity).
+- **`matrix3d(...)` is chosen deliberately** over individual CSS properties or transform components. It routes onto the compositor-only update path in modern browsers — no layout, no paint, just composite.
+- **Allocation is bounded by dirty count, not entity count.** A scene where 10,000 entities are stable and 50 are moving costs 50 string allocations per frame, not 10,000.
+
+## Common mistakes to flag
+
+- Forgetting to call `invalidate()` after page-level state changes (route changes, theme toggles, fullscreen transitions) where the DOM may have been desynced from the matrix state externally.
+- Sizing `maxEntities` too small — the binder silently clamps but the user may not notice some entities aren't updating.
+- Re-querying the elements array per frame — defeats the purpose. Cache element references once at setup.
+
+## Performance contract
+
+- **Construction**: O(maxEntities). Single `Float32Array` allocation + `fill(NaN)` pass.
+- **Per-frame update**: O(count) comparisons. O(dirty) string allocations. Zero allocations for fully-stable scenes.
+- **Memory**: 64 bytes per entity, allocated once.
+
+## Files
+
+- `DOMBinder.js` — source (single file, ESM)
+- `DOMBinder.d.ts` — TypeScript declarations
+- `README.md` — human documentation
+
+## License
+
+MIT.

@@ -1,0 +1,61 @@
+{
+  "name": "@zakkster/lite-dom-binder",
+  "version": "1.0.0",
+  "description": "Blazing-fast, zero-GC CSSOM updater. Bypasses framework diffing by piping raw Float32Array matrices directly to DOM transforms with hardware-level dirty checking.",
+  "type": "module",
+  "main": "./DOMBinder.js",
+  "module": "./DOMBinder.js",
+  "types": "./DOMBinder.d.ts",
+  "exports": {
+    ".": {
+      "types": "./DOMBinder.d.ts",
+      "node": "./DOMBinder.js",
+      "import": "./DOMBinder.js",
+      "default": "./DOMBinder.js"
+    }
+  },
+  "files": [
+    "DOMBinder.js",
+    "DOMBinder.d.ts",
+    "README.md",
+    "llms.txt",
+    "LICENSE.txt"
+  ],
+  "scripts": {
+    "test": "vitest run"
+  },
+  "keywords": [
+    "zero-gc",
+    "dom",
+    "cssom",
+    "matrix3d",
+    "transform",
+    "performance",
+    "animation",
+    "ecs",
+    "rendering",
+    "data-oriented-design"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
+  },
+  "license": "MIT",
+  "author": "Zahary Shinikchiev <shinikchiev@yahoo.com>",
+  "homepage": "https://github.com/PeshoVurtoleta/lite-dom-binder#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PeshoVurtoleta/lite-dom-binder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PeshoVurtoleta/lite-dom-binder/issues",
+    "email": "shinikchiev@yahoo.com"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/PeshoVurtoleta"
+  },
+  "sideEffects": false
+}
